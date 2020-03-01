@@ -13,7 +13,11 @@ queue_t *q_new()
 {
     queue_t *q = malloc(sizeof(queue_t));
     /* TODO: What if malloc returned NULL? */
+    if (!q)
+        return NULL;
     q->head = NULL;
+    q->tail = NULL;
+    q->size = 0;
     return q;
 }
 
@@ -22,25 +26,51 @@ void q_free(queue_t *q)
 {
     /* TODO: How about freeing the list elements and the strings? */
     /* Free queue structure */
-    free(q);
+    if (q != NULL) {
+        list_ele_t *tmp;
+        while (q->head != NULL) {
+            tmp = q->head->next;
+            free(q->head->value);
+            free(q->head);
+            q->head = tmp;
+        }
+        free(q);
+    }
 }
 
 /*
  * Attempt to insert element at head of queue.
  * Return true if successful.
  * Return false if q is NULL or could not allocate space.
- * Argument s points to the string to be stored.
+ * Arguments points to the string to be stored.
  * The function must explicitly allocate space and copy the string into it.
  */
 bool q_insert_head(queue_t *q, char *s)
 {
     list_ele_t *newh;
-    /* TODO: What should you do if the q is NULL? */
+    /* If q is NULL, return false */
+    if (!q)
+        return false;
     newh = malloc(sizeof(list_ele_t));
-    /* Don't forget to allocate space for the string and copy it */
-    /* What if either call to malloc returns NULL? */
+    /* Check whether the space is enough or not */
+    if (!newh)
+        return false;
+    size_t length = strlen(s) + 1;
+    newh->value = malloc(length * sizeof(char));
+    /* Check whether the space is enough or not */
+    if (!newh->value) {
+        free(newh);
+        return false;
+    }
+    memcpy(newh->value, s, length);
     newh->next = q->head;
-    q->head = newh;
+    /* If the queue is empty, let the tail pointer point to the new head */
+    if (q->size == 0)
+        q->head = q->tail = newh;
+    else {
+        q->head = newh;
+    }
+    q->size++;
     return true;
 }
 
@@ -53,10 +83,34 @@ bool q_insert_head(queue_t *q, char *s)
  */
 bool q_insert_tail(queue_t *q, char *s)
 {
+    list_ele_t *newt;
+    /* If q is NULL, return false */
+    if (!q)
+        return false;
+    newt = malloc(sizeof(list_ele_t));
+    /* Check whether the space is enough or not */
+    if (!newt)
+        return false;
+    size_t length = strlen(s) + 1;
+    newt->value = malloc(length * sizeof(char));
+    /* Check whether the space is enough or not */
+    if (!newt->value) {
+        free(newt);
+        return false;
+    }
+    memcpy(newt->value, s, length);
+    /* If the queue is empty, let the head pointer point to the new tail */
+    if (q->size == 0)
+        q->head = q->tail = newt;
+    else {
+        q->tail->next = newt;
+        q->tail = newt;
+    }
+    q->size++;
+    return true;
     /* TODO: You need to write the complete code for this function */
     /* Remember: It should operate in O(1) time */
     /* TODO: Remove the above comment when you are about to implement. */
-    return false;
 }
 
 /*
@@ -81,10 +135,7 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
  */
 int q_size(queue_t *q)
 {
-    /* TODO: You need to write the code for this function */
-    /* Remember: It should operate in O(1) time */
-    /* TODO: Remove the above comment when you are about to implement. */
-    return 0;
+    return (q == NULL) ? 0 : q->size;
 }
 
 /*
